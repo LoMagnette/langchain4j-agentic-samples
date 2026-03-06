@@ -1,0 +1,159 @@
+package be.lomagnette.agentic.samples;
+
+import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.agentic.Agent;
+import dev.langchain4j.agentic.declarative.K;
+import dev.langchain4j.agentic.declarative.TypedKey;
+import dev.langchain4j.agentic.UntypedAgent;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
+
+
+/**
+ * S07 - Composing Patterns: Rebellion HQ Assault Planner
+ *
+ * Demonstrates that workflows are agents, so they can be sub-agents of
+ * other workflows. Here a sequence contains a loop:
+ *
+ *   imperialDecoder -> councilLoop(jediCouncilCritic <-> planReviser) -> holonetBroadcaster
+ *
+ * The councilLoop iterates until 4 Jedi Masters approve or 3 iterations pass.
+ * Then holonetBroadcaster turns the approved plan into a call to arms.
+ */
+public class S07_ComposingPatterns {
+
+    // TypedKeys for scope communication
+    public static class BattlePlan implements TypedKey<String> { }
+    public static class CouncilFeedback implements TypedKey<String> { }
+    public static class MasterApprovals implements TypedKey<Integer> { 
+        @Override
+        public Integer defaultValue() {
+            return 0; // start with 0 approvals
+        }
+    }
+    public static class CallToArms implements TypedKey<String> { }
+
+    // Agent 1 (sequence step 1): Decodes intercepted Imperial intelligence
+    public interface ImperialDecoder {
+        @Agent("Decodes intercepted Imperial transmissions into actionable intelligence")
+        @UserMessage("""
+                You are a Rebel Alliance signals officer. Decode this intercepted Imperial \
+                transmission into a clear intelligence summary. Identify the target, \
+                Imperial forces, and any vulnerabilities. Keep it to 3-4 sentences.
+
+                Intercepted data: {{data}}""")
+        String decode(@V("data") String data);
+    }
+
+    // Agent 2a (loop step 1): Jedi Council reviews the battle plan
+    public interface JediCouncilCritic {
+        @Agent("Reviews a battle plan as the Jedi Council and provides critique")
+        @UserMessage("""
+                You are the Jedi Council (Yoda, Mace Windu, Ki-Adi-Mundi, Plo Koon). \
+                Review this battle plan. Each master votes APPROVE or REJECT with a brief reason. \
+                Count the total approvals. Format:
+                Yoda: APPROVE/REJECT - reason
+                Mace Windu: APPROVE/REJECT - reason
+                Ki-Adi-Mundi: APPROVE/REJECT - reason
+                Plo Koon: APPROVE/REJECT - reason
+                Total approvals: N/4
+
+                Battle plan: {{BattlePlan}}""")
+        String review(@K(BattlePlan.class) String plan);
+    }
+
+    // Agent 2b (loop step 2): Revises the plan based on council feedback
+    public interface PlanReviser {
+        @Agent("Revises the battle plan based on Jedi Council feedback")
+        @UserMessage("""
+                You are Mon Mothma, leader of the Rebel Alliance. Revise the battle plan \
+                to address the Jedi Council's concerns. Produce an improved plan in 4-5 sentences.
+
+                Current plan: {{BattlePlan}}
+
+                Council feedback: {{CouncilFeedback}}""")
+        String revise(@K(BattlePlan.class) String plan, @K(CouncilFeedback.class) String feedback);
+    }
+
+    // Agent 3 (sequence step 3): Broadcasts the approved plan as a call to arms
+    public interface HolonetBroadcaster {
+        @Agent("Transforms an approved battle plan into an inspiring call to arms")
+        @UserMessage("""
+                You are Princess Leia Organa. Transform this approved battle plan into \
+                an inspiring call to arms for the entire Rebel Alliance. Make it stirring \
+                and hopeful. Keep it to 3-4 sentences.
+
+                Approved battle plan: {{BattlePlan}}""")
+        String broadcast(@K(BattlePlan.class) String plan);
+    }
+
+    // Typed pipeline interface - invoke the full composed workflow with a single call.
+    public interface RebellionHQ {
+        @Agent("Decodes intelligence, refines a battle plan through council review, and broadcasts the result")
+        String plan(@V("data") String interceptedData);
+    }
+
+    public static void main(String... args) {
+        ChatModel model = OllamaChatModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("llama3.2:1b")
+                .build();
+
+        // Build agents for the inner loop
+        JediCouncilCritic jediCouncilCritic = AgenticServices
+                .agentBuilder(JediCouncilCritic.class)
+                .chatModel(model)
+                .outputKey(CouncilFeedback.class)
+                .build();
+
+        PlanReviser planReviser = AgenticServices
+                .agentBuilder(PlanReviser.class)
+                .chatModel(model)
+                .outputKey(BattlePlan.class)
+                .build();
+
+        // Build the loop: council reviews, reviser improves, repeat.
+        // Exits when 4 masters approve or after 3 iterations.
+        UntypedAgent councilLoop = AgenticServices
+                .loopBuilder()
+                .subAgents(jediCouncilCritic, planReviser)
+                .outputKey(BattlePlan.class)
+                .exitCondition(scope -> scope.readState(MasterApprovals.class) >= 4)
+                .maxIterations(3)
+                .build();
+
+        // Build the outer sequence agents
+        ImperialDecoder imperialDecoder = AgenticServices
+                .agentBuilder(ImperialDecoder.class)
+                .chatModel(model)
+                .outputKey(BattlePlan.class)
+                .build();
+
+        HolonetBroadcaster holonetBroadcaster = AgenticServices
+                .agentBuilder(HolonetBroadcaster.class)
+                .chatModel(model)
+                .outputKey(CallToArms.class)
+                .build();
+
+        // Build the full sequence: decode -> loop(critique <-> revise) -> broadcast
+        RebellionHQ hq = AgenticServices
+                .sequenceBuilder(RebellionHQ.class)
+                .subAgents(imperialDecoder, councilLoop, holonetBroadcaster)
+                .outputKey(CallToArms.class)
+                .build();
+
+        // Invoke the pipeline
+        String interceptedData = "DS-2... construction 60%... shield generator moon of Endor... " +
+                "Emperor arriving... fleet massing at Sullust... trap suspected";
+
+        IO.println("=== Rebellion HQ: Composed Workflow ===");
+        IO.println("Intercepted data: " + interceptedData);
+        IO.println();
+
+        String callToArms = hq.plan(interceptedData);
+
+        IO.println("Call to Arms: " + callToArms);
+    }
+}
