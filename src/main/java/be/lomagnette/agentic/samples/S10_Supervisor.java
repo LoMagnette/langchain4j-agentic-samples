@@ -24,7 +24,6 @@ import dev.langchain4j.service.V;
 public class S10_Supervisor {
 
     public static class Situation implements TypedKey<String> { }
-    public static class MissionReport implements TypedKey<String> { }
 
     public interface StormtrooperRegiment {
         @Agent(name = "Storm trooper Regiment", description = "501st Legion stormtroopers for ground operations and crowd control")

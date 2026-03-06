@@ -38,10 +38,9 @@ public class S06_ConditionalWorkflow {
     public interface AlignmentClassifier {
         @Agent(value = "Classifies a Star Wars character's Force alignment")
         @UserMessage("""
-                You are a Force-sensitive oracle. Classify this character's alignment as 
+                You are a Force-sensitive oracle. Classify this character's alignment as
                 exactly one of: LIGHT_SIDE, DARK_SIDE, or NEUTRAL.
                 Respond with ONLY the alignment label, nothing else.
-                
                 
                 Character: {{CharacterName}}""")
         AlignmentType classify(@V("CharacterName") String name);

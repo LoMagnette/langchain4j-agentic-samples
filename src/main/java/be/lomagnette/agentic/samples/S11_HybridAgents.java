@@ -130,12 +130,12 @@ public class S11_HybridAgents {
             IO.println("  [broadcastAction] Encrypting orders...");
             IO.println("  [broadcastAction] Transmitting on Rebel secure frequency...");
 
-            String broadcast = String.format(
-                    "=== PRIORITY ONE - ENCRYPTED ===\n" +
-                    "FROM: Rebel Alliance High Command\n" +
-                    "TO: All units in range of %s\n" +
-                    "ORDERS: %s\n" +
-                    "=== MAY THE FORCE BE WITH YOU ===",
+            String broadcast = String.format("""
+                    === PRIORITY ONE - ENCRYPTED ===
+                    FROM: Rebel Alliance High Command
+                    TO: All units in range of %s
+                    ORDERS: %s
+                    === MAY THE FORCE BE WITH YOU ===""",
                     system != null ? system : "UNKNOWN SYSTEM", plan);
 
             scope.writeState("broadcast", broadcast);

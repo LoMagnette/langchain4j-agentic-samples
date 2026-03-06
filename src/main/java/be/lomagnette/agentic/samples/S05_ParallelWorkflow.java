@@ -76,7 +76,7 @@ public class S05_ParallelWorkflow {
                 .formatted(fleet, ground, jedi);
     }
 
-    public static void main(String... args) {
+    void main() {
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("llama3.2:1b")

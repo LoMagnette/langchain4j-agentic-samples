@@ -23,7 +23,7 @@ public class S01_BasicAgent {
         String darken(@V("jediName") String jediName);
     }
 
-    public static void main(String... args) {
+    void main() {
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("llama3.2:1b")

@@ -81,7 +81,7 @@ public class S09_GoalOriented {
         String forge(@K(JediName.class) String jediName);
     }
 
-    public static void main(String... args) {
+    void main() {
         //var listener = new DroidListener();
 
         ChatModel model = OllamaChatModel.builder()
