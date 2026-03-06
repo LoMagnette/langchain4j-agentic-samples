@@ -11,21 +11,16 @@ import dev.langchain4j.service.V;
 
 /**
  * S04 - Loop Workflow: Attack Plan Review
- *
  * Two agents iterate in a loop: Admiral Ackbar reviews the plan and
  * a plan reviser improves it. The loop runs for a maximum of 3 iterations.
- *
  *   admiralAckbar (review) <-> planReviser (improve)
  *        exit after maxIterations reached
  */
 public class S04_LoopWorkflow {
 
-    // TypedKeys for scope communication
     public static class AttackPlan implements TypedKey<String> { }
     public static class ReviewFeedback implements TypedKey<String> { }
 
-    // Agent 1: Admiral Ackbar reviews the attack plan
-    // He is notoriously cautious and will reject plans that smell like traps
     public interface AdmiralAckbar {
         @Agent("Reviews an attack plan for traps and tactical weaknesses")
         @UserMessage("""
@@ -38,7 +33,6 @@ public class S04_LoopWorkflow {
         String review(@K(AttackPlan.class) String plan);
     }
 
-    // Agent 2: Revises the plan based on Ackbar's feedback
     public interface PlanReviser {
         @Agent("Revises the attack plan based on Admiral Ackbar's feedback")
         @UserMessage("""
@@ -51,20 +45,17 @@ public class S04_LoopWorkflow {
         String revise(@K(AttackPlan.class) String plan, @K(ReviewFeedback.class) String feedback);
     }
 
-    // Typed pipeline interface - invoke the loop with a single call.
-    // @V seeds the initial "attackPlan" value into the scope.
     public interface AttackPlanReviewPipeline {
         @Agent("Reviews and iteratively improves an attack plan through Admiral Ackbar's scrutiny")
         String review(@V("AttackPlan") String plan);
     }
 
-    public static void main(String... args) {
+    void main() {
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("llama3.2:1b")
                 .build();
 
-        // Build the two agents
         AdmiralAckbar ackbar = AgenticServices
                 .agentBuilder(AdmiralAckbar.class)
                 .chatModel(model)
@@ -77,9 +68,6 @@ public class S04_LoopWorkflow {
                 .outputKey(AttackPlan.class)
                 .build();
 
-        // Build the loop pipeline.
-        // Agents iterate: ackbar reviews, reviser improves, repeat.
-        // The loop runs for a maximum of 3 iterations.
         AttackPlanReviewPipeline pipeline = AgenticServices
                 .loopBuilder(AttackPlanReviewPipeline.class)
                 .subAgents(ackbar, reviser)
@@ -87,7 +75,6 @@ public class S04_LoopWorkflow {
                 .outputKey(AttackPlan.class)
                 .build();
 
-        // Invoke the pipeline - one call runs the entire review loop
         String initialPlan = "Fly X-wings straight at the Death Star's main reactor port. " +
                              "No distractions, no diversions. Just a direct assault.";
 

@@ -12,25 +12,20 @@ import dev.langchain4j.service.V;
 
 /**
  * S10 - Supervisor Agent: Darth Vader's Command
- *
  * Demonstrates a supervisor agent that decides which sub-agents to deploy
  * based on the situation. Darth Vader (the supervisor) has four units:
- *
  *   - StormtrooperRegiment: ground operations, crowd control
  *   - BountyHunterAgent: tracking and capturing specific targets
  *   - StarDestroyerAgent: orbital bombardment and fleet engagements
  *   - DeathStarAgent: the Emperor's preferred solution to disagreements
- *
  * The supervisor LLM analyzes the situation and routes to the right agent(s).
  * Uses SupervisorResponseStrategy.SUMMARY to get a unified response.
  */
 public class S10_Supervisor {
 
-    // TypedKeys for scope communication
     public static class Situation implements TypedKey<String> { }
     public static class MissionReport implements TypedKey<String> { }
 
-    // Sub-agent 1: Stormtrooper regiment for ground operations
     public interface StormtrooperRegiment {
         @Agent(name = "Storm trooper Regiment", description = "501st Legion stormtroopers for ground operations and crowd control")
         @UserMessage("""
@@ -42,7 +37,6 @@ public class S10_Supervisor {
         String deploy(@K(Situation.class) String situation);
     }
 
-    // Sub-agent 2: Bounty hunter for tracking targets
     public interface BountyHunterAgent {
         @Agent(name="Bounty Hunter Agent", description = "Elite bounty hunter for tracking, capturing, or eliminating specific targets")
         @UserMessage("""
@@ -54,7 +48,6 @@ public class S10_Supervisor {
         String hunt(@K(Situation.class) String situation);
     }
 
-    // Sub-agent 3: Star Destroyer for orbital operations
     public interface StarDestroyerAgent {
         @Agent(name="Star Destroyer Agent", description = "Imperial Star Destroyer for orbital bombardment and space superiority")
         @UserMessage("""
@@ -66,7 +59,6 @@ public class S10_Supervisor {
         String engage(@K(Situation.class) String situation);
     }
 
-    // Sub-agent 4: Death Star - the Emperor's preferred solution to disagreements
     public interface DeathStarAgent {
         @Agent(name="Death Star Agent", description = "Death Star battle station for planetary-scale operations and ultimate deterrence")
         @UserMessage("""
@@ -78,26 +70,23 @@ public class S10_Supervisor {
         String obliterate(@K(Situation.class) String situation);
     }
 
-    // Typed pipeline interface for the supervisor
     public interface DarthVaderCommand {
         @Agent(name="Darth Vader", description = "Darth Vader commanding Imperial forces to handle any situation")
         String command(@V("Situation") String situation);
     }
 
-    public static void main(String... args) {
+    void main() {
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("llama3.2:1b")
                 .build();
 
-        // In production, consider a more capable model for the supervisor
         ChatModel plannerModel = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("qwen3:14b")
                 .build();
 
         var droid = new DroidListener();
-        // Build the four sub-agents as their typed interfaces
         StormtrooperRegiment stormtrooperRegiment = AgenticServices
                 .agentBuilder(StormtrooperRegiment.class)
                 .chatModel(model)
@@ -126,8 +115,6 @@ public class S10_Supervisor {
                 .listener(droid)
                 .build();
 
-        // Darth Vader as supervisor - the LLM decides which agents to deploy
-        // SUMMARY strategy combines all deployed agents' responses into one report
         DarthVaderCommand vader = AgenticServices
                 .supervisorBuilder(DarthVaderCommand.class)
                 .chatModel(plannerModel)
@@ -136,7 +123,6 @@ public class S10_Supervisor {
                 .listener(droid)
                 .build();
 
-        // --- Scenario 1: A specific target is hiding ---
         IO.println("=== Scenario 1: Fugitive Jedi ===");
         String scenario1 = "A Jedi survivor has been spotted in the lower levels of Coruscant. " +
                            "They are disguised as a merchant and moving between safe houses.";
@@ -145,7 +131,6 @@ public class S10_Supervisor {
         IO.println("Vader's report: " + vader.command(scenario1));
         IO.println();
 
-        // --- Scenario 2: Rebel base discovered ---
         IO.println("=== Scenario 2: Rebel Base on Hoth ===");
         String scenario2 = "Probe droids have confirmed a Rebel base on the ice planet Hoth. " +
                            "The base has a shield generator and an ion cannon protecting it.";
@@ -154,7 +139,6 @@ public class S10_Supervisor {
         IO.println("Vader's report: " + vader.command(scenario2));
         IO.println();
 
-        // --- Scenario 3: Pirate fleet harassing supply lines ---
         IO.println("=== Scenario 3: Pirate Fleet ===");
         String scenario3 = "A pirate fleet is raiding Imperial supply convoys near Kessel. " +
                            "Multiple fast corvettes are hitting shipping lanes and jumping to hyperspace.";
@@ -163,7 +147,6 @@ public class S10_Supervisor {
         IO.println("Vader's report: " + vader.command(scenario3));
         IO.println();
 
-        // --- Scenario 4: A planet refuses to cooperate ---
         IO.println("=== Scenario 4: Defiant Planet ===");
         String scenario4 = "The planet Alderaan is suspected of funding the Rebel Alliance. " +
                            "Their senate delegation has refused all Imperial demands and is harboring traitors.";

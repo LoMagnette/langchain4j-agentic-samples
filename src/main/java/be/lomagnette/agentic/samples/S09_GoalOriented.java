@@ -1,18 +1,13 @@
 package be.lomagnette.agentic.samples;
 
-import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.Agent;
+import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.declarative.K;
 import dev.langchain4j.agentic.declarative.TypedKey;
-import dev.langchain4j.agentic.observability.AgentListener;
-import dev.langchain4j.agentic.observability.AgentRequest;
-import dev.langchain4j.agentic.observability.AgentResponse;
 import dev.langchain4j.agentic.patterns.goap.GoalOrientedPlanner;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.service.UserMessage;
-
-import java.util.List;
 
 /**
  * S09 - Goal-Oriented Planner: Lightsaber Forging Pipeline
@@ -41,7 +36,6 @@ public class S09_GoalOriented {
     public static class Lightsaber implements TypedKey<String> {
     }
 
-    // Agent 1: Forages for a kyber crystal suited to the Jedi
     public interface CrystalForagerAgent {
         @Agent("Forages a kyber crystal on Ilum based on the Jedi's Force affinity")
         @UserMessage("""
@@ -54,7 +48,6 @@ public class S09_GoalOriented {
         String forage(@K(JediName.class) String jediName);
     }
 
-    // Agent 2: Designs the hilt around the crystal
     public interface HiltCrafterAgent {
         @Agent("Crafts a lightsaber hilt design based on the kyber crystal properties")
         @UserMessage("""
@@ -66,7 +59,6 @@ public class S09_GoalOriented {
         String craft(@K(KyberCrystal.class) String kyberCrystal);
     }
 
-    // Agent 3: Calibrates the final lightsaber
     public interface BladeCalibrationAgent {
         @Agent("Calibrates and activates the completed lightsaber")
         @UserMessage("""
@@ -79,13 +71,11 @@ public class S09_GoalOriented {
         String calibrate(@K(HiltDesign.class) String hiltDesign);
     }
 
-    // Typed pipeline interface for the full forge
     public interface LightsaberForge {
         @Agent("Forges a complete lightsaber for a Jedi")
         String forge(@K(JediName.class) String jediName);
     }
 
-    // Typed pipeline interface for the partial forge (hilt only)
     public interface HiltOnlyForge {
         @Agent("Forges a lightsaber hilt for a Jedi (skips blade calibration)")
         String forge(@K(JediName.class) String jediName);
@@ -99,7 +89,6 @@ public class S09_GoalOriented {
                 .modelName("llama3.2:1b")
                 .build();
 
-        // Build each agent with its output key - this tells the planner what each agent produces
         CrystalForagerAgent crystalForager = AgenticServices
                 .agentBuilder(CrystalForagerAgent.class)
                 .chatModel(model)
@@ -121,8 +110,6 @@ public class S09_GoalOriented {
                 //.listener(listener)
                 .build();
 
-        // GoalOrientedPlanner resolves the dependency chain automatically:
-        // "lightsaber" needs "hiltDesign" needs "kyberCrystal" needs "jediName"
         LightsaberForge forge = AgenticServices
                 .plannerBuilder(LightsaberForge.class)
                 .subAgents(crystalForager, hiltCrafter, bladeCalibration)
@@ -131,8 +118,6 @@ public class S09_GoalOriented {
                 //.listener(listener)
                 .build();
 
-        // Partial forge: changing outputKey to "hiltDesign" skips BladeCalibration
-        // The planner only resolves: "hiltDesign" <- "kyberCrystal" <- "jediName"
         HiltOnlyForge hiltOnly = AgenticServices
                 .plannerBuilder(HiltOnlyForge.class)
                 .subAgents(crystalForager, hiltCrafter, bladeCalibration)
@@ -141,13 +126,11 @@ public class S09_GoalOriented {
                 //.listener(listener)
                 .build();
 
-        // --- Full forge: all three agents execute ---
         IO.println("=== Lightsaber Forge: Full Pipeline ===");
         String lightsaber = forge.forge("Cal Kestis");
         IO.println(lightsaber);
         IO.println();
 
-        // --- Partial forge: BladeCalibration is skipped ---
         IO.println("=== Lightsaber Forge: Partial Pipeline (outputKey = \"hiltDesign\") ===");
         String hilt = hiltOnly.forge("Ahsoka Tano");
         IO.println(hilt);

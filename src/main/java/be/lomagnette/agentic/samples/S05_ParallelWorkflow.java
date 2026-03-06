@@ -11,17 +11,14 @@ import dev.langchain4j.service.V;
 
 /**
  * S05 - Parallel Workflow: Battle of Endor
- *
  * Three agents run in parallel to plan different aspects of the Battle of Endor:
  *   - Space Fleet Strategist (fleet disposition above Endor)
  *   - Ground Assault Agent (Ewok ground strategy on the forest moon)
  *   - Jedi Mission Planner (Luke's objective aboard the Death Star)
- *
  * Results are merged via the .output() function into a unified battle plan.
  */
 public class S05_ParallelWorkflow {
 
-    // Agent 1: Plans the Rebel fleet engagement above Endor
     public interface SpaceFleetStrategist {
         @Agent(name = "Space Fleet Strategist", description = "Plans the Rebel fleet engagement in the space battle above Endor")
         @UserMessage("""
@@ -34,7 +31,6 @@ public class S05_ParallelWorkflow {
         String plan(@V("briefing") String briefing);
     }
 
-    // Agent 2: Plans the ground assault on Endor's forest moon
     public interface GroundAssaultAgent {
         @Agent(name = "Ground Assault Planner", description = "Plans the Ewok-assisted ground assault on the shield generator bunker")
         @UserMessage("""
@@ -47,7 +43,6 @@ public class S05_ParallelWorkflow {
         String plan(@V("briefing") String briefing);
     }
 
-    // Agent 3: Plans Luke's Jedi mission aboard the Death Star
     public interface JediMissionPlanner {
         @Agent(name = "Jedi Mission Planner", description = "Plans Luke Skywalker's mission to confront the Emperor aboard the Death Star")
         @UserMessage("""
@@ -59,13 +54,11 @@ public class S05_ParallelWorkflow {
         String plan(@V("briefing") String briefing);
     }
 
-    // Typed pipeline interface - invoke the parallel workflow with a single call.
     public interface BattleOfEndorPipeline {
         @Agent(name="Battle of Endor Planner", description = "Plans all aspects of the Battle of Endor in parallel")
         String plan(@V("briefing") String briefing);
     }
 
-    // Merges the three parallel results into one unified battle plan
     static String assembleBattlePlan(String fleet, String ground, String jedi) {
         return """
                 === BATTLE OF ENDOR - UNIFIED PLAN ===
@@ -91,7 +84,6 @@ public class S05_ParallelWorkflow {
 
         //var droid = new DroidListener();
 
-        // Build the three parallel agents - each writes to a different scope key
         SpaceFleetStrategist spaceFleetStrategist = AgenticServices
                 .agentBuilder(SpaceFleetStrategist.class)
                 .chatModel(model)
@@ -113,9 +105,6 @@ public class S05_ParallelWorkflow {
                 //.listener(droid)
                 .build();
 
-        // Build the typed parallel pipeline.
-        // All three agents run concurrently, then .output() merges their
-        // results from scope into a single unified battle plan.
         BattleOfEndorPipeline pipeline = AgenticServices
                 .parallelBuilder(BattleOfEndorPipeline.class)
                 .subAgents(spaceFleetStrategist, groundAssaultAgent, jediMissionPlanner)
@@ -128,7 +117,6 @@ public class S05_ParallelWorkflow {
                 //.listener(droid)
                 .build();
 
-        // Invoke the pipeline - one call runs all three agents in parallel
         String missionBriefing = "The second Death Star is under construction above the forest moon of Endor. " +
                 "Its shield generator is on the moon's surface. The Emperor himself is aboard.";
 

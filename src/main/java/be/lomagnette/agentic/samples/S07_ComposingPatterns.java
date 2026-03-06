@@ -13,18 +13,14 @@ import dev.langchain4j.service.V;
 
 /**
  * S07 - Composing Patterns: Rebellion HQ Assault Planner
- *
  * Demonstrates that workflows are agents, so they can be sub-agents of
  * other workflows. Here a sequence contains a loop:
- *
  *   imperialDecoder -> councilLoop(jediCouncilCritic <-> planReviser) -> holonetBroadcaster
- *
  * The councilLoop iterates until 4 Jedi Masters approve or 3 iterations pass.
  * Then holonetBroadcaster turns the approved plan into a call to arms.
  */
 public class S07_ComposingPatterns {
 
-    // TypedKeys for scope communication
     public static class BattlePlan implements TypedKey<String> { }
     public static class CouncilFeedback implements TypedKey<String> { }
     public static class MasterApprovals implements TypedKey<Integer> { 
@@ -35,7 +31,6 @@ public class S07_ComposingPatterns {
     }
     public static class CallToArms implements TypedKey<String> { }
 
-    // Agent 1 (sequence step 1): Decodes intercepted Imperial intelligence
     public interface ImperialDecoder {
         @Agent("Decodes intercepted Imperial transmissions into actionable intelligence")
         @UserMessage("""
@@ -47,7 +42,6 @@ public class S07_ComposingPatterns {
         String decode(@V("data") String data);
     }
 
-    // Agent 2a (loop step 1): Jedi Council reviews the battle plan
     public interface JediCouncilCritic {
         @Agent("Reviews a battle plan as the Jedi Council and provides critique")
         @UserMessage("""
@@ -64,7 +58,6 @@ public class S07_ComposingPatterns {
         String review(@K(BattlePlan.class) String plan);
     }
 
-    // Agent 2b (loop step 2): Revises the plan based on council feedback
     public interface PlanReviser {
         @Agent("Revises the battle plan based on Jedi Council feedback")
         @UserMessage("""
@@ -77,7 +70,6 @@ public class S07_ComposingPatterns {
         String revise(@K(BattlePlan.class) String plan, @K(CouncilFeedback.class) String feedback);
     }
 
-    // Agent 3 (sequence step 3): Broadcasts the approved plan as a call to arms
     public interface HolonetBroadcaster {
         @Agent("Transforms an approved battle plan into an inspiring call to arms")
         @UserMessage("""
@@ -89,19 +81,17 @@ public class S07_ComposingPatterns {
         String broadcast(@K(BattlePlan.class) String plan);
     }
 
-    // Typed pipeline interface - invoke the full composed workflow with a single call.
     public interface RebellionHQ {
         @Agent("Decodes intelligence, refines a battle plan through council review, and broadcasts the result")
         String plan(@V("data") String interceptedData);
     }
 
-    public static void main(String... args) {
+    void main() {
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("llama3.2:1b")
                 .build();
 
-        // Build agents for the inner loop
         JediCouncilCritic jediCouncilCritic = AgenticServices
                 .agentBuilder(JediCouncilCritic.class)
                 .chatModel(model)
@@ -114,8 +104,6 @@ public class S07_ComposingPatterns {
                 .outputKey(BattlePlan.class)
                 .build();
 
-        // Build the loop: council reviews, reviser improves, repeat.
-        // Exits when 4 masters approve or after 3 iterations.
         UntypedAgent councilLoop = AgenticServices
                 .loopBuilder()
                 .subAgents(jediCouncilCritic, planReviser)
@@ -124,7 +112,6 @@ public class S07_ComposingPatterns {
                 .maxIterations(3)
                 .build();
 
-        // Build the outer sequence agents
         ImperialDecoder imperialDecoder = AgenticServices
                 .agentBuilder(ImperialDecoder.class)
                 .chatModel(model)
@@ -137,14 +124,12 @@ public class S07_ComposingPatterns {
                 .outputKey(CallToArms.class)
                 .build();
 
-        // Build the full sequence: decode -> loop(critique <-> revise) -> broadcast
         RebellionHQ hq = AgenticServices
                 .sequenceBuilder(RebellionHQ.class)
                 .subAgents(imperialDecoder, councilLoop, holonetBroadcaster)
                 .outputKey(CallToArms.class)
                 .build();
 
-        // Invoke the pipeline
         String interceptedData = "DS-2... construction 60%... shield generator moon of Endor... " +
                 "Emperor arriving... fleet massing at Sullust... trap suspected";
 

@@ -22,7 +22,6 @@ import dev.langchain4j.service.V;
  */
 public class S06_ConditionalWorkflow {
 
-    // TypedKeys for scope communication
     public static class CharacterName implements TypedKey<String> { }
     public static class Alignment implements TypedKey<AlignmentType> {
         @Override
@@ -33,10 +32,9 @@ public class S06_ConditionalWorkflow {
     public static class MissionBriefing implements TypedKey<String> { }
 
     public enum AlignmentType {
-        LIGHT_SIDE, DARK_SIDE, NEUTRAL, UNKNOWN;
+        LIGHT_SIDE, DARK_SIDE, NEUTRAL, UNKNOWN
     }
 
-    // Step 1: Classifies a character's alignment
     public interface AlignmentClassifier {
         @Agent(value = "Classifies a Star Wars character's Force alignment")
         @UserMessage("""
@@ -49,7 +47,6 @@ public class S06_ConditionalWorkflow {
         AlignmentType classify(@V("CharacterName") String name);
     }
 
-    // Conditional branch: Jedi Council briefing for Light Side characters
     public interface JediCouncilAgent {
         @Agent("Provides a Jedi Council mission briefing for Light Side operatives")
         @UserMessage("""
@@ -61,7 +58,6 @@ public class S06_ConditionalWorkflow {
         String brief(@K(CharacterName.class) String name);
     }
 
-    // Conditional branch: Sith Lord briefing for Dark Side characters
     public interface SithLordAgent {
         @Agent("Provides a Sith Lord mission briefing for Dark Side operatives")
         @UserMessage("""
@@ -73,7 +69,6 @@ public class S06_ConditionalWorkflow {
         String brief(@K(CharacterName.class) String name);
     }
 
-    // Conditional branch: Mandalorian briefing for Neutral characters
     public interface MandalorianAgent {
         @Agent("Provides a Mandalorian guild mission briefing for Neutral operatives")
         @UserMessage("""
@@ -85,26 +80,23 @@ public class S06_ConditionalWorkflow {
         String brief(@K(CharacterName.class) String name);
     }
 
-    // Typed pipeline interface - invoke the full conditional workflow with a single call.
     public interface MissionRouter {
         @Agent("Classifies a character and routes to the appropriate mission briefing")
         String briefing(@K(CharacterName.class) String characterName);
     }
 
-    public static void main(String... args) {
+    void main() {
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("llama3.2:1b")
                 .build();
 
-        // Build the alignment classifier - writes alignment to scope
         AlignmentClassifier alignmentClassifier = AgenticServices
                 .agentBuilder(AlignmentClassifier.class)
                 .chatModel(model)
                 .outputKey(Alignment.class)
                 .build();
 
-        // Build the three specialist agents - one for each alignment
         JediCouncilAgent jediCouncilAgent = AgenticServices
                 .agentBuilder(JediCouncilAgent.class)
                 .chatModel(model)
@@ -123,21 +115,18 @@ public class S06_ConditionalWorkflow {
                 .outputKey(MissionBriefing.class)
                 .build();
 
-        // Build the conditional router - reads alignment from scope and dispatches
         var conditionalRouter = AgenticServices.conditionalBuilder()
                 .subAgents(scope -> scope.readState(Alignment.class) == AlignmentType.LIGHT_SIDE, jediCouncilAgent)
                 .subAgents(scope -> scope.readState(Alignment.class) == AlignmentType.DARK_SIDE, sithLordAgent)
                 .subAgents(scope -> scope.readState(Alignment.class) == AlignmentType.NEUTRAL, mandalorianAgent)
                 .build();
 
-        // Build the full sequence: classify alignment, then route to specialist
         MissionRouter router = AgenticServices
                 .sequenceBuilder(MissionRouter.class)
                 .subAgents(alignmentClassifier, conditionalRouter)
                 .outputKey(MissionBriefing.class)
                 .build();
 
-        // Invoke the pipeline for each character
         String[] characters = {"Luke Skywalker", "Darth Maul", "Din Djarin"};
 
         for (String character : characters) {

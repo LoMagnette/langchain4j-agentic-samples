@@ -12,11 +12,9 @@ import dev.langchain4j.service.V;
 
 /**
  * S12 - Human-in-the-Loop: Death Star Firing Protocol
- *
  * Some decisions should not be automated. Firing a superlaser at a planet
  * is one of them. This sample demonstrates HumanInTheLoop, which pauses
  * the workflow and asks a human for input before proceeding.
- *
  * Pipeline:
  *   targetAnalyzer (AI)      -> analyzes the proposed target
  *   commanderApproval (human) -> asks the commander to confirm
@@ -30,7 +28,6 @@ public class S12_HumanInTheLoop {
     public static class ConfirmedTarget implements TypedKey<Object> { }
     public static class FiringResult implements TypedKey<String> { }
 
-    // AI Agent 1: Analyzes the proposed target
     public interface TargetAnalyzer {
         @Agent("Analyzes a proposed planetary target for the Death Star's superlaser")
         @UserMessage("""
@@ -43,7 +40,6 @@ public class S12_HumanInTheLoop {
         String analyze(@K(ProposedTarget.class) String target);
     }
 
-    // AI Agent 3: Fires the superlaser (or stands down)
     public interface SuperlaserAgent {
         @Agent("Executes or aborts the Death Star superlaser firing based on commander confirmation")
         @UserMessage("""
@@ -61,28 +57,23 @@ public class S12_HumanInTheLoop {
                     @K(ConfirmedTarget.class) String confirmation);
     }
 
-    // Typed pipeline interface
     public interface DeathStarProtocol {
         @Agent("Analyzes a target, requests commander confirmation, and fires or aborts the superlaser")
         String execute(@V("ProposedTarget") String target);
     }
 
-    public static void main(String... args) {
+    void main() {
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("llama3.2:1b")
                 .build();
 
-        // AI Agent: Target analyzer
         TargetAnalyzer targetAnalyzer = AgenticServices
                 .agentBuilder(TargetAnalyzer.class)
                 .chatModel(model)
                 .outputKey(TargetAnalysis.class)
                 .build();
 
-        // Human-in-the-Loop: Commander must confirm before firing.
-        // The responseProvider receives the scope (to read context) and returns
-        // the human's response, which is written to "confirmedTarget".
         HumanInTheLoop commanderApproval = AgenticServices.humanInTheLoopBuilder()
                 .description("An agent that asks for validation")
                 .outputKey("ConfirmedTarget")
@@ -102,21 +93,18 @@ public class S12_HumanInTheLoop {
                 })
                 .build();
 
-        // AI Agent: Superlaser firing officer
         SuperlaserAgent superlaserAgent = AgenticServices
                 .agentBuilder(SuperlaserAgent.class)
                 .chatModel(model)
                 .outputKey(FiringResult.class)
                 .build();
 
-        // Build the sequence: analyze -> human approval -> fire/abort
         DeathStarProtocol protocol = AgenticServices
                 .sequenceBuilder(DeathStarProtocol.class)
                 .subAgents(targetAnalyzer, commanderApproval, superlaserAgent)
                 .outputKey(FiringResult.class)
                 .build();
 
-        // --- Invoke the pipeline ---
         String target = "Alderaan";
 
         IO.println("=== Death Star Firing Protocol ===");
