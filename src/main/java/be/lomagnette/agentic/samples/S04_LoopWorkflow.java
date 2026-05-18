@@ -47,7 +47,7 @@ public class S04_LoopWorkflow {
 
     public interface AttackPlanReviewPipeline {
         @Agent("Reviews and iteratively improves an attack plan through Admiral Ackbar's scrutiny")
-        String review(@V("AttackPlan") String plan);
+        String review(@K(AttackPlan.class) String plan);
     }
 
     void main() {

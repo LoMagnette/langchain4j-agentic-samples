@@ -4,6 +4,8 @@ import java.util.concurrent.Executors;
 
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.agentic.declarative.K;
+import dev.langchain4j.agentic.declarative.TypedKey;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.service.UserMessage;
@@ -19,6 +21,11 @@ import dev.langchain4j.service.V;
  */
 public class S05_ParallelWorkflow {
 
+    public static class Briefing implements TypedKey<String> { }
+    public static class FleetDisposition implements TypedKey<String> { }
+    public static class EwokGroundStrategy implements TypedKey<String> { }
+    public static class LukeObjective implements TypedKey<String> { }
+
     public interface SpaceFleetStrategist {
         @Agent(name = "Space Fleet Strategist", description = "Plans the Rebel fleet engagement in the space battle above Endor")
         @UserMessage("""
@@ -28,7 +35,7 @@ public class S05_ParallelWorkflow {
                 Keep it to 3-4 sentences.
 
                 Mission briefing: {{briefing}}""")
-        String plan(@V("briefing") String briefing);
+        String plan(@K(Briefing.class) String briefing);
     }
 
     public interface GroundAssaultAgent {
@@ -40,7 +47,7 @@ public class S05_ParallelWorkflow {
                 Keep it to 3-4 sentences.
 
                 Mission briefing: {{briefing}}""")
-        String plan(@V("briefing") String briefing);
+        String plan(@K(Briefing.class) String briefing);
     }
 
     public interface JediMissionPlanner {
@@ -51,12 +58,12 @@ public class S05_ParallelWorkflow {
                 What is your approach? Keep it to 3-4 sentences.
 
                 Mission briefing: {{briefing}}""")
-        String plan(@V("briefing") String briefing);
+        String plan(@K(Briefing.class) String briefing);
     }
 
     public interface BattleOfEndorPipeline {
         @Agent(name="Battle of Endor Planner", description = "Plans all aspects of the Battle of Endor in parallel")
-        String plan(@V("briefing") String briefing);
+        String plan(@K(Briefing.class) String briefing);
     }
 
     static String assembleBattlePlan(String fleet, String ground, String jedi) {
@@ -87,21 +94,21 @@ public class S05_ParallelWorkflow {
         SpaceFleetStrategist spaceFleetStrategist = AgenticServices
                 .agentBuilder(SpaceFleetStrategist.class)
                 .chatModel(model)
-                .outputKey("fleetDisposition")
+                .outputKey(FleetDisposition.class)
                 //.listener(droid)
                 .build();
 
         GroundAssaultAgent groundAssaultAgent = AgenticServices
                 .agentBuilder(GroundAssaultAgent.class)
                 .chatModel(model)
-                .outputKey("ewokGroundStrategy")
+                .outputKey(EwokGroundStrategy.class)
                 //.listener(droid)
                 .build();
 
         JediMissionPlanner jediMissionPlanner = AgenticServices
                 .agentBuilder(JediMissionPlanner.class)
                 .chatModel(model)
-                .outputKey("lukeObjective")
+                .outputKey(LukeObjective.class)
                 //.listener(droid)
                 .build();
 
@@ -110,9 +117,9 @@ public class S05_ParallelWorkflow {
                 .subAgents(spaceFleetStrategist, groundAssaultAgent, jediMissionPlanner)
                 .executor(Executors.newFixedThreadPool(3))
                 .output(scope -> assembleBattlePlan(
-                        (String) scope.readState("fleetDisposition"),
-                        (String) scope.readState("ewokGroundStrategy"),
-                        (String) scope.readState("lukeObjective")))
+                        scope.readState(FleetDisposition.class),
+                        scope.readState(EwokGroundStrategy.class),
+                        scope.readState(LukeObjective.class)))
                 .outputKey("battleOfEndor")
                 //.listener(droid)
                 .build();

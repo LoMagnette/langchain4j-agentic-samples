@@ -65,7 +65,7 @@ public class S12_HumanInTheLoop {
     void main() {
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
-                .modelName("llama3.2:1b")
+                .modelName("gemma4")
                 .build();
 
         TargetAnalyzer targetAnalyzer = AgenticServices

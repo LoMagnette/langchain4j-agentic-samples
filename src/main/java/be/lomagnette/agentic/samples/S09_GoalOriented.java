@@ -24,17 +24,10 @@ import dev.langchain4j.service.UserMessage;
  */
 public class S09_GoalOriented {
 
-    public static class JediName implements TypedKey<String> {
-    }
-
-    public static class KyberCrystal implements TypedKey<String> {
-    }
-
-    public static class HiltDesign implements TypedKey<String> {
-    }
-
-    public static class Lightsaber implements TypedKey<String> {
-    }
+    public static class JediName implements TypedKey<String> { }
+    public static class KyberCrystal implements TypedKey<String> { }
+    public static class HiltDesign implements TypedKey<String> { }
+    public static class Lightsaber implements TypedKey<String> { }
 
     public interface CrystalForagerAgent {
         @Agent("Forages a kyber crystal on Ilum based on the Jedi's Force affinity")
