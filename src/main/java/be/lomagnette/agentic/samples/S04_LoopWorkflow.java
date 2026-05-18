@@ -1,13 +1,12 @@
 package be.lomagnette.agentic.samples;
 
-import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.Agent;
+import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.declarative.K;
 import dev.langchain4j.agentic.declarative.TypedKey;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.service.UserMessage;
-import dev.langchain4j.service.V;
 
 /**
  * S04 - Loop Workflow: Attack Plan Review
