@@ -139,6 +139,6 @@ public class S09_GoalOriented {
 
         IO.println("=== Forge Complete ===");
 
-        HtmlReportGenerator.generateReport(monitor, Path.of("goap.html"));
+        HtmlReportGenerator.generateReport(monitor, Path.of("target/goap.html"));
     }
 }

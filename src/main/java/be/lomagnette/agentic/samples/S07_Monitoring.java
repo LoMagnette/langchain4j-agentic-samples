@@ -150,6 +150,6 @@ public class S07_Monitoring {
         var execution = monitor.successfulExecutions().get(0);
         IO.println(execution);
 
-        HtmlReportGenerator.generateReport(monitor, Path.of("review-composing-patterns.html"));
+        HtmlReportGenerator.generateReport(monitor, Path.of("target/review-composing-patterns.html"));
     }
 }
