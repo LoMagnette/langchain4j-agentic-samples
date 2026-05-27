@@ -89,7 +89,7 @@ public class S07_ComposingPatterns {
     void main() {
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
-                .modelName("llama3.2:1b")
+                .modelName("gemma4")
                 .build();
 
         JediCouncilCritic jediCouncilCritic = AgenticServices

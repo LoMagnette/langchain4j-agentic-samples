@@ -9,6 +9,8 @@ import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
+import java.util.List;
+
 /**
  * S06 - Conditional Workflow: Mission Briefing Router
  * <p>
@@ -126,13 +128,13 @@ public class S06_ConditionalWorkflow {
                 .outputKey(MissionBriefing.class)
                 .build();
 
-        String[] characters = {"Luke Skywalker", "Darth Maul", "Din Djarin"};
+        var characters = List.of("Luke Skywalker", "Darth Maul", "Din Djarin");
 
-        for (String character : characters) {
+        characters.forEach(character -> {
             IO.println("=== Mission Briefing for: " + character + " ===");
-            String briefing = router.briefing(character);
+            var briefing = router.briefing(character);
             IO.println(briefing);
             IO.println();
-        }
+        });
     }
 }
