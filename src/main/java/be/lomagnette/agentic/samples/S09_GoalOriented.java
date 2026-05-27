@@ -4,10 +4,14 @@ import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.declarative.K;
 import dev.langchain4j.agentic.declarative.TypedKey;
+import dev.langchain4j.agentic.observability.AgentMonitor;
+import dev.langchain4j.agentic.observability.HtmlReportGenerator;
 import dev.langchain4j.agentic.patterns.goap.GoalOrientedPlanner;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.service.UserMessage;
+
+import java.nio.file.Path;
 
 /**
  * S09 - Goal-Oriented Planner: Lightsaber Forging Pipeline
@@ -23,6 +27,7 @@ import dev.langchain4j.service.UserMessage;
  * Changing the outputKey to "hiltDesign" causes it to skip BladeCalibration.
  */
 public class S09_GoalOriented {
+
 
     public static class JediName implements TypedKey<String> { }
     public static class KyberCrystal implements TypedKey<String> { }
@@ -76,6 +81,7 @@ public class S09_GoalOriented {
 
     void main() {
         //var listener = new DroidListener();
+        var monitor = new AgentMonitor();
 
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
@@ -109,6 +115,7 @@ public class S09_GoalOriented {
                 .outputKey(Lightsaber.class)
                 .planner(GoalOrientedPlanner::new)
                 //.listener(listener)
+                .listener(monitor)
                 .build();
 
         HiltOnlyForge hiltOnly = AgenticServices
@@ -117,6 +124,7 @@ public class S09_GoalOriented {
                 .outputKey(HiltDesign.class)
                 .planner(GoalOrientedPlanner::new)
                 //.listener(listener)
+                .listener(monitor)
                 .build();
 
         IO.println("=== Lightsaber Forge: Full Pipeline ===");
@@ -130,5 +138,7 @@ public class S09_GoalOriented {
         IO.println();
 
         IO.println("=== Forge Complete ===");
+
+        HtmlReportGenerator.generateReport(monitor, Path.of("goap.html"));
     }
 }
