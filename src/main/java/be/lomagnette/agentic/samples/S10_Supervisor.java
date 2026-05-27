@@ -3,12 +3,16 @@ package be.lomagnette.agentic.samples;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.declarative.K;
+import dev.langchain4j.agentic.declarative.SupervisorRequest;
 import dev.langchain4j.agentic.declarative.TypedKey;
+import dev.langchain4j.agentic.observability.AgentMonitor;
+import dev.langchain4j.agentic.observability.HtmlReportGenerator;
 import dev.langchain4j.agentic.supervisor.SupervisorResponseStrategy;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.service.UserMessage;
-import dev.langchain4j.service.V;
+
+import java.nio.file.Path;
 
 /**
  * S10 - Supervisor Agent: Darth Vader's Command
@@ -24,6 +28,10 @@ import dev.langchain4j.service.V;
 public class S10_Supervisor {
 
     public static class Situation implements TypedKey<String> { }
+    public static class StormtrooperReport implements TypedKey<String> { }
+    public static class BountyHunterReport implements TypedKey<String> { }
+    public static class StarDestroyerReport implements TypedKey<String> { }
+    public static class DeathStarReport implements TypedKey<String> { }
 
     public interface StormtrooperRegiment {
         @Agent(name = "Storm trooper Regiment", description = "501st Legion stormtroopers for ground operations and crowd control")
@@ -71,10 +79,23 @@ public class S10_Supervisor {
 
     public interface DarthVaderCommand {
         @Agent(name="Darth Vader", description = "Darth Vader commanding Imperial forces to handle any situation")
-        String command(@V("Situation") String situation);
+        @UserMessage("""
+        You're Darth Vader, the Dark Lord of the Sith. Your orders are absolute.
+        Report your plan to handle this situation using Imperial resources. Be
+        authoritative and decisive (2-3 sentences).
+
+        Situation: {{Situation}}""")
+        String command(@K(Situation.class) String situation);
+
+        @SupervisorRequest
+        static String request(@K(Situation.class) String situation) {
+            return "Handle this situation using the appropriate Imperial resources: " + situation;
+        }
     }
 
     void main() {
+        var monitor = new AgentMonitor();
+
         ChatModel model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("llama3.2:1b")
@@ -82,35 +103,35 @@ public class S10_Supervisor {
 
         ChatModel plannerModel = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
-                .modelName("qwen3:14b")
+                .modelName("gemma4")
                 .build();
 
         var droid = new DroidListener();
         StormtrooperRegiment stormtrooperRegiment = AgenticServices
                 .agentBuilder(StormtrooperRegiment.class)
                 .chatModel(model)
-                .outputKey("stormtrooperReport")
+                .outputKey(StormtrooperReport.class)
                 .listener(droid)
                 .build();
 
         BountyHunterAgent bountyHunter = AgenticServices
                 .agentBuilder(BountyHunterAgent.class)
                 .chatModel(model)
-                .outputKey("bountyHunterReport")
+                .outputKey(BountyHunterReport.class)
                 .listener(droid)
                 .build();
 
         StarDestroyerAgent starDestroyer = AgenticServices
                 .agentBuilder(StarDestroyerAgent.class)
                 .chatModel(model)
-                .outputKey("starDestroyerReport")
+                .outputKey(StarDestroyerReport.class)
                 .listener(droid)
                 .build();
 
         DeathStarAgent deathStar = AgenticServices
                 .agentBuilder(DeathStarAgent.class)
                 .chatModel(model)
-                .outputKey("deathStarReport")
+                .outputKey(DeathStarReport.class)
                 .listener(droid)
                 .build();
 
@@ -120,6 +141,7 @@ public class S10_Supervisor {
                 .subAgents(stormtrooperRegiment, bountyHunter, starDestroyer, deathStar)
                 .responseStrategy(SupervisorResponseStrategy.SUMMARY)
                 .listener(droid)
+                .listener(monitor)
                 .build();
 
         IO.println("=== Scenario 1: Fugitive Jedi ===");
@@ -154,6 +176,9 @@ public class S10_Supervisor {
         IO.println("Vader's report: " + vader.command(scenario4));
         IO.println();
 
+
         IO.println("=== Lord Vader's Command Complete ===");
+
+        HtmlReportGenerator.generateReport(monitor, Path.of("target/supervisor.html"));
     }
 }
