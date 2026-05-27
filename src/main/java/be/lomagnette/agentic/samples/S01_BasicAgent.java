@@ -35,10 +35,10 @@ public class S01_BasicAgent {
                 .outputKey("sithName")
                 .build();
 
-        String sithName = sithNamer.darken("Obi-Wan Kenobi");
+        var sithName = sithNamer.darken("Obi-Wan Kenobi");
         IO.println("Jedi: Obi-Wan Kenobi -> Sith: " + sithName);
 
-        String sithName2 = sithNamer.darken("Luke Skywalker");
+        var sithName2 = sithNamer.darken("Luke Skywalker");
         IO.println("Jedi: Luke Skywalker -> Sith: " + sithName2);
     }
 }
