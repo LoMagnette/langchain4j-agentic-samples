@@ -24,6 +24,7 @@ public class S05_ParallelWorkflow {
     public static class FleetDisposition implements TypedKey<String> { }
     public static class EwokGroundStrategy implements TypedKey<String> { }
     public static class LukeObjective implements TypedKey<String> { }
+    public static class BattleOfEndor implements TypedKey<String> { }
 
     public interface SpaceFleetStrategist {
         @Agent(name = "Space Fleet Strategist", description = "Plans the Rebel fleet engagement in the space battle above Endor")
@@ -33,7 +34,7 @@ public class S05_ParallelWorkflow {
                 and how to deal with the Imperial Star Destroyers and the Death Star's shield. \
                 Keep it to 3-4 sentences.
 
-                Mission briefing: {{briefing}}""")
+                Mission briefing: {{Briefing}}""")
         String plan(@K(Briefing.class) String briefing);
     }
 
@@ -45,7 +46,7 @@ public class S05_ParallelWorkflow {
                 Include troop positioning, diversions, and the bunker breach. \
                 Keep it to 3-4 sentences.
 
-                Mission briefing: {{briefing}}""")
+                Mission briefing: {{Briefing}}""")
         String plan(@K(Briefing.class) String briefing);
     }
 
@@ -56,7 +57,7 @@ public class S05_ParallelWorkflow {
                 confront Darth Vader, and turn him back to the light side while the Emperor watches. \
                 What is your approach? Keep it to 3-4 sentences.
 
-                Mission briefing: {{briefing}}""")
+                Mission briefing: {{Briefing}}""")
         String plan(@K(Briefing.class) String briefing);
     }
 
@@ -119,7 +120,7 @@ public class S05_ParallelWorkflow {
                         scope.readState(FleetDisposition.class),
                         scope.readState(EwokGroundStrategy.class),
                         scope.readState(LukeObjective.class)))
-                .outputKey("battleOfEndor")
+                .outputKey(BattleOfEndor.class)
                 //.listener(droid)
                 .build();
 
