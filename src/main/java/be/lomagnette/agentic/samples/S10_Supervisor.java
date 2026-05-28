@@ -79,12 +79,6 @@ public class S10_Supervisor {
 
     public interface DarthVaderCommand {
         @Agent(name="Darth Vader", description = "Darth Vader commanding Imperial forces to handle any situation")
-        @UserMessage("""
-        You're Darth Vader, the Dark Lord of the Sith. Your orders are absolute.
-        Report your plan to handle this situation using Imperial resources. Be
-        authoritative and decisive (2-3 sentences).
-
-        Situation: {{Situation}}""")
         String command(@K(Situation.class) String situation);
 
         @SupervisorRequest

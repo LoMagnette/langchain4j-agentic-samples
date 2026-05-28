@@ -62,7 +62,7 @@ public class S09_GoalOriented {
         @UserMessage("""
                 You are a Jedi weapon master performing the final lightsaber calibration. \
                 Based on the hilt design, describe the blade's characteristics when ignited: \
-                blade length, stability, sound, and combat suitability. \
+                blade length, stability, sound, and combat suitability.
                 Keep it to 2-3 sentences.
 
                 Hilt design: {{HiltDesign}}""")
