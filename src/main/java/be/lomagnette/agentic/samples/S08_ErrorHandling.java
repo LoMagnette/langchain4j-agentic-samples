@@ -1,6 +1,5 @@
 package be.lomagnette.agentic.samples;
 
-import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.agent.ErrorRecoveryResult;

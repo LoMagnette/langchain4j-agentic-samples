@@ -148,7 +148,7 @@ public class S07_Monitoring {
 
         IO.println("Call to Arms: " + callToArms);
 
-        var execution = monitor.successfulExecutions().get(0);
+        var execution = monitor.successfulExecutions().getFirst();
         IO.println(execution);
 
         HtmlReportGenerator.generateReport(monitor, Path.of("target/review-composing-patterns.html"));

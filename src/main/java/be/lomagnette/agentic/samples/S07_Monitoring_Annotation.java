@@ -143,7 +143,7 @@ public class S07_Monitoring_Annotation {
 
         IO.println("Call to Arms: " + callToArms);
 
-        var execution = MONITOR.successfulExecutions().get(0);
+        var execution = MONITOR.successfulExecutions().getFirst();
         IO.println(execution);
 
         HtmlReportGenerator.generateReport(MONITOR, Path.of("target/review-composing-patterns.html"));
