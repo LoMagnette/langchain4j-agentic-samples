@@ -2,6 +2,7 @@ package be.lomagnette.agentic.samples;
 
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.agentic.UntypedAgent;
 import dev.langchain4j.agentic.declarative.K;
 import dev.langchain4j.agentic.declarative.TypedKey;
 import dev.langchain4j.agentic.observability.AgentMonitor;
@@ -108,7 +109,7 @@ public class S07_Monitoring {
                 .outputKey(BattlePlan.class)
                 .build();
 
-        var councilLoop = AgenticServices
+        UntypedAgent councilLoop = AgenticServices
                 .loopBuilder()
                 .subAgents(jediCouncilCritic, planReviser)
                 .outputKey(BattlePlan.class)

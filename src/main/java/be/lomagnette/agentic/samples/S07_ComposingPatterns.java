@@ -87,18 +87,18 @@ public class S07_ComposingPatterns {
     }
 
     void main() {
-        ChatModel model = OllamaChatModel.builder()
+        var model = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("gemma4")
                 .build();
 
-        JediCouncilCritic jediCouncilCritic = AgenticServices
+        var jediCouncilCritic = AgenticServices
                 .agentBuilder(JediCouncilCritic.class)
                 .chatModel(model)
                 .outputKey(CouncilFeedback.class)
                 .build();
 
-        PlanReviser planReviser = AgenticServices
+        var planReviser = AgenticServices
                 .agentBuilder(PlanReviser.class)
                 .chatModel(model)
                 .outputKey(BattlePlan.class)
@@ -112,25 +112,25 @@ public class S07_ComposingPatterns {
                 .maxIterations(3)
                 .build();
 
-        ImperialDecoder imperialDecoder = AgenticServices
+        var imperialDecoder = AgenticServices
                 .agentBuilder(ImperialDecoder.class)
                 .chatModel(model)
                 .outputKey(BattlePlan.class)
                 .build();
 
-        HolonetBroadcaster holonetBroadcaster = AgenticServices
+        var holonetBroadcaster = AgenticServices
                 .agentBuilder(HolonetBroadcaster.class)
                 .chatModel(model)
                 .outputKey(CallToArms.class)
                 .build();
 
-        RebellionHQ hq = AgenticServices
+        var hq = AgenticServices
                 .sequenceBuilder(RebellionHQ.class)
                 .subAgents(imperialDecoder, councilLoop, holonetBroadcaster)
                 .outputKey(CallToArms.class)
                 .build();
 
-        String interceptedData = "DS-2... construction 60%... shield generator moon of Endor... " +
+        var interceptedData = "DS-2... construction 60%... shield generator moon of Endor... " +
                 "Emperor arriving... fleet massing at Sullust... trap suspected";
 
         IO.println("=== Rebellion HQ: Composed Workflow ===");

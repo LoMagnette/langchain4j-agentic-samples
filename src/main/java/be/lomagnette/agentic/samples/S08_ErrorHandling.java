@@ -93,16 +93,16 @@ public class S08_ErrorHandling {
                 .subAgents(jediProfiler, sithNamer, sithAnnouncer)
                 .outputKey(Announcement.class)
                 .errorHandler(errorContext -> {
-                    IO.println("[ERROR HANDLER] Agent '" + errorContext.agentName()
+                    IO.println("❌[ERROR HANDLER] Agent '" + errorContext.agentName()
                             + "' failed: " + errorContext.exception().getMessage());
 
                     if (errorContext.agentName().equals("darken")) {
-                        IO.println("[ERROR HANDLER] Retrying with fallback name 'Dave'...");
+                        IO.println("❌ [ERROR HANDLER] Retrying with fallback name 'Dave'...");
                         errorContext.agenticScope().writeState("JediName", "Dave");
                         return ErrorRecoveryResult.retry();
                     }
 
-                    IO.println("[ERROR HANDLER] Unrecoverable error, re-throwing.");
+                    IO.println("❌[ERROR HANDLER] Unrecoverable error, re-throwing.");
                     return ErrorRecoveryResult.throwException();
                 })
                 .build();
