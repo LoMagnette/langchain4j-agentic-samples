@@ -1,5 +1,6 @@
 package be.lomagnette.agentic.samples;
 
+import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
@@ -55,8 +56,9 @@ public class S08_ErrorHandling {
                 to the galaxy. Include their new name and a dark prophecy. \
                 Keep it to 2-3 sentences.
 
-                Sith name: {{SithName}}""")
+                Sith name: {{sithName}}""")
         String announce(@K(SithName.class) String sithName);
+
     }
 
     public interface SithPipeline {
@@ -103,7 +105,7 @@ public class S08_ErrorHandling {
                     }
 
                     IO.println("❌[ERROR HANDLER] Unrecoverable error, re-throwing.");
-                    return ErrorRecoveryResult.throwException();
+                    return ErrorRecoveryResult.result("Emperor Palpatine: I have no idea what happened but he's dead.");
                 })
                 .build();
 
